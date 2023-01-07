@@ -215,7 +215,11 @@ function getTooltipText(users: string[], guildId: string): string {
   if (count === 2)
     return (Messages.TWO_USERS_TYPING as MessageFn).format({ a: names[0], b: names[1] });
   if (count === 3)
-    return (Messages.THREE_USERS as MessageFn).format({ a: names[0], b: names[1], c: names[2] });
+    return (Messages.THREE_USERS_TYPING as MessageFn).format({
+      a: names[0],
+      b: names[1],
+      c: names[2],
+    });
   return Messages.SEVERAL_USERS_TYPING as string;
 }
 
