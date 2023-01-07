@@ -1,16 +1,16 @@
 {
-  "id": "dev.replugged.PluginTemplate",
-  "name": "Plugin Template",
-  "description": "A plugin template",
+  "id": "dev.albertp.ChannelTyping",
+  "name": "Channel Typing",
+  "description": "Show typing indicators in the channel list",
   "author": {
-    "name": "replugged",
-    "discordID": "1000992611840049192",
-    "github": "replugged-org"
+    "name": "asportnoy",
+    "discordID": "489484338514100234",
+    "github": "asportnoy"
   },
-  "version": "1.0.3",
+  "version": "1.0.0",
   "updater": {
     "type": "github",
-    "id": "replugged-org/plugin-template"
+    "id": "asportnoy/channel-typing"
   },
   "license": "MIT",
   "type": "replugged-plugin",
