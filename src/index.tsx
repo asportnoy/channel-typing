@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { Channel, GuildMember, User } from "discord-types/general";
+import { Channel } from "discord-types/general";
 import { Injector, Logger, common, settings, util, webpack } from "replugged";
 import type { ModuleExportsWithProps } from "replugged/dist/types";
 import TypingIndicator from "./TypingIndicator";
@@ -7,7 +7,9 @@ const { waitForModule, filters, getExportsForProps } = webpack;
 const {
   React,
   lodash: { compact, isObject },
+  users: { getCurrentUser, getUser, getTrueMember },
 } = common;
+const { forceUpdateElement } = util;
 
 interface Settings {
   hideSelf?: boolean;
@@ -28,19 +30,6 @@ async function waitForProps<
   const mod = await waitForModule(filters.byProps(...props), { timeout: 10 * 1000 });
   const exports = getExportsForProps<Props, Exports>(mod, props);
   return exports!;
-}
-
-function forceUpdateElement(query: string, all = false): void {
-  const elements = (
-    all ? [...document.querySelectorAll(query)] : [document.querySelector(query)]
-  ).filter(Boolean) as Element[];
-  elements.forEach((element) => {
-    (
-      util.getOwnerInstance(element) as
-        | (Record<string, unknown> & { forceUpdate: () => void })
-        | null
-    )?.forceUpdate();
-  });
 }
 
 function findInTree(
@@ -88,16 +77,6 @@ type TypingStore = {
   getTypingUsers: (channelId: string) => Record<string, string>;
 };
 
-type UserStore = {
-  getCurrentUser: () => User;
-  getUser: (userId: string) => User | null;
-};
-
-type MemberStore = {
-  getMember: (guildId: string, userId: string) => GuildMember | null;
-  getTrueMember: (guildId: string, userId: string) => GuildMember | null;
-};
-
 type BlockedStore = {
   isBlocked: (userId: string) => boolean;
   isFriend: (userId: string) => boolean;
@@ -112,8 +91,6 @@ type Messages = Record<string, string | MessageFn>;
 
 let removeChangeListener: () => void;
 
-let userStore: UserStore;
-let memberStore: MemberStore;
 let Messages: Messages;
 
 export async function start(): Promise<void> {
@@ -128,16 +105,6 @@ export async function start(): Promise<void> {
   );
   if (!blockedStore) {
     logger.error("Failed to find blocked users store");
-    return;
-  }
-  userStore = await waitForProps<keyof UserStore, UserStore>("getCurrentUser", "getUser");
-  if (!userStore) {
-    logger.error("Failed to find user store");
-    return;
-  }
-  memberStore = await waitForProps<keyof MemberStore, MemberStore>("getMember", "getTrueMember");
-  if (!memberStore) {
-    logger.error("Failed to find member store");
     return;
   }
   const i18n = webpack
@@ -180,7 +147,7 @@ export async function start(): Promise<void> {
 
     const typingUsers = Object.keys(typingStore.getTypingUsers(args.channel.id)).filter((id) => {
       if (blockedStore.isBlocked(id.toString())) return false;
-      if (cfg.get("hideSelf", true) && id === userStore.getCurrentUser().id) return false;
+      if (cfg.get("hideSelf", true) && id === getCurrentUser().id) return false;
       return true;
     });
 
@@ -198,12 +165,12 @@ export async function start(): Promise<void> {
 }
 
 function getTooltipText(users: string[], guildId: string): string {
-  const members = users.map((id) => memberStore.getMember(guildId, id));
+  const members = users.map((id) => getTrueMember(guildId, id));
   const names = compact(
     members.map((m) => {
       if (!m) return null;
       if (m.nick) return m.nick;
-      const user = userStore.getUser(m.userId);
+      const user = getUser(m.userId);
       if (!user) return null;
       return user.username;
     }),
