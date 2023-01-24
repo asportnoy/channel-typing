@@ -17,9 +17,20 @@ interface Settings {
   hideOnMuted?: boolean;
 }
 
+const defaultSettings: Partial<Settings> = {
+  hideSelf: true,
+  hideOnSelected: true,
+  hideOnMuted: true,
+};
+
 const logger = Logger.plugin("Channel Typing");
 
-const cfg = await settings.init<Settings>("dev.albertp.ChannelTyping");
+export const cfg = await settings.init<Settings, keyof typeof defaultSettings>(
+  "dev.albertp.ChannelTyping",
+  defaultSettings,
+);
+
+export { Settings } from "./Settings";
 
 const inject = new Injector();
 
@@ -134,8 +145,8 @@ export async function start(): Promise<void> {
   if (!reactFn || typeof reactFn !== "string") return;
 
   inject.after(channelItem, reactFn, ([args], res) => {
-    if (cfg.get("hideOnSelected", true) && args.selected) return;
-    if (cfg.get("hideOnMuted", true) && args.muted) return;
+    if (cfg.get("hideOnSelected") && args.selected) return;
+    if (cfg.get("hideOnMuted") && args.muted) return;
 
     const child = findInTree(res as unknown as Record<string, unknown>, (n) => {
       if (!isObject(n)) return false;
@@ -147,7 +158,7 @@ export async function start(): Promise<void> {
 
     const typingUsers = Object.keys(typingStore.getTypingUsers(args.channel.id)).filter((id) => {
       if (blockedStore.isBlocked(id.toString())) return false;
-      if (cfg.get("hideSelf", true) && id === getCurrentUser().id) return false;
+      if (cfg.get("hideSelf") && id === getCurrentUser().id) return false;
       return true;
     });
 
