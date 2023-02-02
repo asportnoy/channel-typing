@@ -165,7 +165,7 @@ export async function start(): Promise<void> {
     if (!typingUsers.length) return;
 
     if (child) {
-      if (!child.children.some((x) => x.type === TypingIndicator)) {
+      if (!child.children.some((x) => x?.type === TypingIndicator)) {
         child.children.push(
           <TypingIndicator
             tooltip={getTooltipText(typingUsers, args.channel.guild_id)}></TypingIndicator>,
