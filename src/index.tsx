@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { Channel } from "discord-types/general";
 import { Injector, Logger, common, settings, util, webpack } from "replugged";
-import type { ModuleExportsWithProps } from "replugged/dist/types";
 import TypingIndicator from "./TypingIndicator";
-const { waitForModule, filters, getExportsForProps } = webpack;
+const { filters, getByProps, getFunctionKeyBySource, waitForProps, waitForModule } = webpack;
 const {
   React,
   lodash: { compact, isObject },
@@ -33,15 +32,6 @@ export const cfg = await settings.init<Settings, keyof typeof defaultSettings>(
 export { Settings } from "./Settings";
 
 const inject = new Injector();
-
-async function waitForProps<
-  Props extends string,
-  Exports extends ModuleExportsWithProps<Props> = ModuleExportsWithProps<Props>,
->(...props: Props[]): Promise<Exports> {
-  const mod = await waitForModule(filters.byProps(...props), { timeout: 10 * 1000 });
-  const exports = getExportsForProps<Props, Exports>(mod, props);
-  return exports!;
-}
 
 function findInTree(
   tree: Record<string, unknown> | unknown[],
@@ -127,7 +117,7 @@ export async function start(): Promise<void> {
   }
   Messages = i18n.Messages;
 
-  wrapperClass = webpack.getByProps("wrapper", "modeUnread")?.wrapper as string;
+  wrapperClass = getByProps("wrapper", "modeUnread")?.wrapper as string;
   if (!wrapperClass) {
     logger.error("Failed to find wrapper class");
     return;
@@ -138,10 +128,10 @@ export async function start(): Promise<void> {
   typingStore.addChangeListener(typingChange);
   removeChangeListener = () => typingStore.removeChangeListener(typingChange);
 
-  const channelItem: { [k: string]: React.FC<ChannelProps> } = await webpack.waitForModule(
+  const channelItem: { [k: string]: React.FC<ChannelProps> } = await waitForModule(
     filters.bySource("().favoriteSuggestion"),
   );
-  const reactFn = webpack.getFunctionKeyBySource("().favoriteSuggestion", channelItem);
+  const reactFn = getFunctionKeyBySource(channelItem, "().favoriteSuggestion");
   if (!reactFn || typeof reactFn !== "string") return;
 
   inject.after(channelItem, reactFn, ([args], res) => {
