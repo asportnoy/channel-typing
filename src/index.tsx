@@ -7,6 +7,7 @@ const {
   React,
   lodash: { compact, isObject },
   users: { getCurrentUser, getUser, getTrueMember },
+  i18n: { Messages },
 } = common;
 const { forceUpdateElement } = util;
 
@@ -82,17 +83,7 @@ type BlockedStore = {
   isBlocked: (userId: string) => boolean;
   isFriend: (userId: string) => boolean;
 };
-
-type MessageFn = {
-  message: string;
-  format: (args: Record<string, string>) => string;
-};
-
-type Messages = Record<string, string | MessageFn>;
-
 let removeChangeListener: () => void;
-
-let Messages: Messages;
 
 export async function start(): Promise<void> {
   const typingStore = await waitForProps<keyof TypingStore, TypingStore>("getTypingUsers");
@@ -108,14 +99,6 @@ export async function start(): Promise<void> {
     logger.error("Failed to find blocked users store");
     return;
   }
-  const i18n = webpack
-    .getByProps<"Messages", { Messages: Messages }>(["Messages"], { all: true })
-    .find((x) => x.Messages.ACCOUNT);
-  if (!i18n) {
-    logger.error("Failed to find i18n module");
-    return;
-  }
-  Messages = i18n.Messages;
 
   wrapperClass = getByProps("wrapper", "modeUnread")?.wrapper as string;
   if (!wrapperClass) {
@@ -179,11 +162,10 @@ function getTooltipText(users: string[], guildId: string): string {
 
   const count = names.length;
 
-  if (count === 1) return (Messages.ONE_USER_TYPING as MessageFn).format({ a: names[0] });
-  if (count === 2)
-    return (Messages.TWO_USERS_TYPING as MessageFn).format({ a: names[0], b: names[1] });
+  if (count === 1) return Messages.ONE_USER_TYPING.format({ a: names[0] });
+  if (count === 2) return Messages.TWO_USERS_TYPING.format({ a: names[0], b: names[1] });
   if (count === 3)
-    return (Messages.THREE_USERS_TYPING as MessageFn).format({
+    return Messages.THREE_USERS_TYPING.format({
       a: names[0],
       b: names[1],
       c: names[2],
