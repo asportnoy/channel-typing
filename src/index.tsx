@@ -4,7 +4,6 @@ import { Injector, Logger, common, settings, util, webpack } from "replugged";
 import TypingIndicator from "./TypingIndicator";
 const { filters, getByProps, getFunctionKeyBySource, waitForProps, waitForModule } = webpack;
 const {
-  React,
   lodash: { compact, isObject },
   users: { getCurrentUser, getUser, getTrueMember },
   i18n: { Messages },
