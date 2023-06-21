@@ -64,7 +64,7 @@ function findInTree(
   return match ?? null;
 }
 
-let wrapperClass: string;
+let wrapperClass: string | undefined;
 
 function typingChange(): void {
   forceUpdateElement(`.${wrapperClass}`, true);
@@ -85,21 +85,21 @@ type BlockedStore = {
 let removeChangeListener: () => void;
 
 export async function start(): Promise<void> {
-  const typingStore = await waitForProps<keyof TypingStore, TypingStore>("getTypingUsers");
+  const typingStore = await waitForProps<TypingStore>("getTypingUsers");
   if (!typingStore) {
     logger.error("Failed to find typing store");
     return;
   }
-  const blockedStore = await waitForProps<keyof BlockedStore, BlockedStore>(
-    "isBlocked",
-    "isFriend",
-  );
+  const blockedStore = await waitForProps<BlockedStore>("isBlocked", "isFriend");
   if (!blockedStore) {
     logger.error("Failed to find blocked users store");
     return;
   }
 
-  wrapperClass = getByProps("wrapper", "modeUnread")?.wrapper as string;
+  wrapperClass = getByProps<Record<"wrapper" | "modeUnread", string>>(
+    "wrapper",
+    "modeUnread",
+  )?.wrapper;
   if (!wrapperClass) {
     logger.error("Failed to find wrapper class");
     return;
