@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { Channel } from "discord-types/general";
-import { Injector, Logger, common, settings, util, webpack } from "replugged";
-import TypingIndicator from "./TypingIndicator";
-const { filters, getByProps, getFunctionKeyBySource, waitForProps, waitForModule } = webpack;
+import { Logger, common, components, settings, webpack } from "replugged";
+const { waitForProps } = webpack;
 const {
-  lodash: { compact, isObject },
+  React,
+  lodash: { compact },
   users: { getCurrentUser, getUser, getTrueMember },
   i18n: { Messages },
 } = common;
-const { forceUpdateElement } = util;
+const { Loader, Tooltip } = components;
 
 interface Settings {
   hideSelf?: boolean;
@@ -22,7 +21,8 @@ const defaultSettings: Partial<Settings> = {
   hideOnMuted: true,
 };
 
-const logger = Logger.plugin("Channel Typing");
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const logger = Logger.plugin("ChannelTyping");
 
 export const cfg = await settings.init<Settings, keyof typeof defaultSettings>(
   "dev.albertp.ChannelTyping",
@@ -31,120 +31,30 @@ export const cfg = await settings.init<Settings, keyof typeof defaultSettings>(
 
 export { Settings } from "./Settings";
 
-const inject = new Injector();
-
-function findInTree(
-  tree: Record<string, unknown> | unknown[],
-  filter: string | ((obj: unknown) => boolean),
-): unknown | null {
-  if (!tree || typeof tree !== "object") {
-    return null;
-  }
-
-  if (typeof filter === "string") {
-    if (!Array.isArray(tree) && filter in tree) {
-      return tree[filter];
-    }
-
-    return null;
-  } else if (filter(tree)) {
-    return tree;
-  }
-
-  const children: unknown[] = Array.isArray(tree)
-    ? tree
-    : Object.entries(tree)
-        .filter(([k]) => ["props", "children", "child", "sibling"].includes(k))
-        .map(([, v]) => v);
-
-  const match = children
-    .filter((child) => Array.isArray(child) || isObject(child))
-    .map((child) => findInTree(child as Record<string, unknown> | unknown[], filter))
-    .find(Boolean);
-  return match ?? null;
-}
-
-let wrapperClass: string | undefined;
-
-function typingChange(): void {
-  forceUpdateElement(`.${wrapperClass}`, true);
-}
-
-type ChannelProps = { channel: Channel; className: string; selected: boolean; muted: boolean };
-
-type TypingStore = {
+interface TypingStore {
   addChangeListener: (fn: () => void) => void;
   removeChangeListener: (fn: () => void) => void;
   getTypingUsers: (channelId: string) => Record<string, string>;
-};
+}
 
-type BlockedStore = {
+interface BlockedStore {
   isBlocked: (userId: string) => boolean;
   isFriend: (userId: string) => boolean;
-};
-let removeChangeListener: () => void;
+}
 
+let typingStore: TypingStore;
+let blockedStore: BlockedStore;
+
+let stopped = false;
 export async function start(): Promise<void> {
-  const typingStore = await waitForProps<TypingStore>("getTypingUsers");
-  if (!typingStore) {
-    logger.error("Failed to find typing store");
-    return;
-  }
-  const blockedStore = await waitForProps<BlockedStore>("isBlocked", "isFriend");
-  if (!blockedStore) {
-    logger.error("Failed to find blocked users store");
-    return;
-  }
+  stopped = false;
 
-  wrapperClass = getByProps<Record<"wrapper" | "modeUnread", string>>(
-    "wrapper",
-    "modeUnread",
-  )?.wrapper;
-  if (!wrapperClass) {
-    logger.error("Failed to find wrapper class");
-    return;
-  }
+  typingStore = await waitForProps<TypingStore>("getTypingUsers");
+  blockedStore = await waitForProps<BlockedStore>("isBlocked", "isFriend");
+}
 
-  logger.log("Found all modules!");
-
-  typingStore.addChangeListener(typingChange);
-  removeChangeListener = () => typingStore.removeChangeListener(typingChange);
-
-  const channelItem: { [k: string]: React.FC<ChannelProps> } = await waitForModule(
-    filters.bySource("().favoriteSuggestion"),
-  );
-  const reactFn = getFunctionKeyBySource(channelItem, "().favoriteSuggestion");
-  if (!reactFn || typeof reactFn !== "string") return;
-
-  inject.after(channelItem, reactFn, ([args], res) => {
-    if (cfg.get("hideOnSelected") && args.selected) return;
-    if (cfg.get("hideOnMuted") && args.muted) return;
-
-    const child = findInTree(res as unknown as Record<string, unknown>, (n) => {
-      if (!isObject(n)) return false;
-      const obj = n as Record<string, unknown>;
-      if (!("className" in obj)) return false;
-      if (typeof obj.className !== "string") return false;
-      return obj.className.startsWith("children-");
-    }) as React.PropsWithChildren<{ children: React.ReactElement[] }> | null;
-
-    const typingUsers = Object.keys(typingStore.getTypingUsers(args.channel.id)).filter((id) => {
-      if (blockedStore.isBlocked(id.toString())) return false;
-      if (cfg.get("hideSelf") && id === getCurrentUser().id) return false;
-      return true;
-    });
-
-    if (!typingUsers.length) return;
-
-    if (child) {
-      if (!child.children.some((x) => x?.type === TypingIndicator)) {
-        child.children.push(
-          <TypingIndicator
-            tooltip={getTooltipText(typingUsers, args.channel.guild_id)}></TypingIndicator>,
-        );
-      }
-    }
-  });
+export function stop(): void {
+  stopped = true;
 }
 
 function getTooltipText(users: string[], guildId: string): string {
@@ -172,7 +82,69 @@ function getTooltipText(users: string[], guildId: string): string {
   return Messages.SEVERAL_USERS_TYPING as string;
 }
 
-export function stop(): void {
-  inject.uninjectAll();
-  removeChangeListener();
+function TypingIndicator({ tooltip }: { tooltip: string }): React.ReactElement | null {
+  return (
+    <Tooltip text={tooltip} style={{ cursor: "pointer" }}>
+      <div
+        className="channel-typing-indicator"
+        style={{
+          height: 16,
+          display: "flex",
+          alignItems: "center",
+          marginLeft: 5,
+          opacity: 0.7,
+        }}>
+        <Loader type="pulsingEllipsis" animated={true}></Loader>
+      </div>
+    </Tooltip>
+  );
+}
+
+function ChannelTyping(props: {
+  channel: Channel;
+  selected: boolean;
+  muted: boolean;
+}): React.ReactNode {
+  const [typingUsers, setTypingUsers] = React.useState<string[]>([]);
+
+  const updateTypingUsers = (): void => {
+    const typingUsers = Object.keys(typingStore.getTypingUsers(props.channel.id)).filter((id) => {
+      if (blockedStore.isBlocked(id.toString())) return false;
+      if (cfg.get("hideSelf") && id === getCurrentUser().id) return false;
+      return true;
+    });
+
+    setTypingUsers(typingUsers);
+  };
+
+  React.useEffect(() => {
+    typingStore.addChangeListener(updateTypingUsers);
+
+    return () => {
+      typingStore.removeChangeListener(updateTypingUsers);
+    };
+  }, []);
+
+  if (!typingStore || !blockedStore || stopped) return;
+
+  if (cfg.get("hideOnSelected") && props.selected) return null;
+  if (cfg.get("hideOnMuted") && props.muted) return null;
+
+  if (!typingUsers.length) return;
+
+  return <TypingIndicator tooltip={getTooltipText(typingUsers, props.channel.guild_id)} />;
+}
+
+export function renderChannelTyping(props: {
+  channel: Channel;
+  selected?: boolean;
+  muted?: boolean;
+}): React.ReactNode {
+  return (
+    <ChannelTyping
+      channel={props.channel}
+      selected={props.selected || false}
+      muted={props.muted || false}
+    />
+  );
 }

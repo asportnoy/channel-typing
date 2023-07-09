@@ -1,6 +1,5 @@
 import { cfg } from ".";
-import { common, components, util } from "replugged";
-const { React } = common;
+import { components, util } from "replugged";
 const { SwitchItem } = components;
 
 export function Settings(): React.ReactElement {
