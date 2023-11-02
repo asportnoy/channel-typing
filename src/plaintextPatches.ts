@@ -9,7 +9,7 @@ const patches: types.PlaintextPatch[] = [
       {
         match: /(\w+)(\.renderChannelInfo\(\))(])/g,
         replace: (_, variable, prefix, suffix) => {
-          return `${variable}${prefix}, ${pluginExports}.renderChannelTyping(${variable}.props)${suffix}`;
+          return `${variable}${prefix}, ${pluginExports}?.renderChannelTyping(${variable}.props)${suffix}`;
         },
       },
     ],
