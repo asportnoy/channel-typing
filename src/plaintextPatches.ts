@@ -4,7 +4,7 @@ const pluginExports = "window.replugged.plugins.getExports('dev.albertp.ChannelT
 
 const patches: types.PlaintextPatch[] = [
   {
-    find: /renderChannelInfo=/,
+    find: /renderChannelInfo\(\){/,
     replacements: [
       {
         match: /(\w+)(\.renderChannelInfo\(\))(])/g,
