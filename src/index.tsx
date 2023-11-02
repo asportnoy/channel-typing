@@ -1,13 +1,11 @@
 import { Channel } from "discord-types/general";
-import { Logger, common, components, settings, webpack } from "replugged";
-const { waitForProps } = webpack;
-const {
-  React,
-  lodash: { compact },
-  users: { getCurrentUser, getUser, getTrueMember },
-  i18n: { Messages },
-} = common;
-const { Loader, Tooltip } = components;
+import { Logger, settings } from "replugged";
+import { waitForProps } from "replugged/webpack";
+import { React, lodash as _, i18n, users } from "replugged/common";
+import { Loader, Tooltip } from "replugged/components";
+
+const { getCurrentUser, getUser, getTrueMember } = users;
+const { Messages } = i18n;
 
 interface Settings {
   hideSelf?: boolean;
@@ -59,7 +57,7 @@ export function stop(): void {
 
 function getTooltipText(users: string[], guildId: string): string {
   const members = users.map((id) => getTrueMember(guildId, id));
-  const names = compact(
+  const names = _.compact(
     members.map((m) => {
       if (!m) return null;
       if (m.nick) return m.nick;
@@ -125,7 +123,7 @@ function ChannelTyping(props: {
     };
   }, []);
 
-  if (!typingStore || !blockedStore || stopped) return;
+  if (stopped) return;
 
   if (cfg.get("hideOnSelected") && props.selected) return null;
   if (cfg.get("hideOnMuted") && props.muted) return null;

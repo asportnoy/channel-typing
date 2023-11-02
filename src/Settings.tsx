@@ -1,6 +1,6 @@
 import { cfg } from ".";
-import { components, util } from "replugged";
-const { SwitchItem } = components;
+import { util } from "replugged";
+import { SwitchItem } from "replugged/components";
 
 export function Settings(): React.ReactElement {
   return (

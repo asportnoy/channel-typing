@@ -15,23 +15,24 @@
     "prettier:fix": "prettier ./src --write",
     "eslint:fix": "eslint ./src --fix",
     "lint": "pnpm run prettier:check && pnpm run eslint:check && pnpm run check",
-    "lint:fix": "pnpm run prettier:fix && pnpm run eslint:fix"
+    "lint:fix": "pnpm run prettier:fix && pnpm run eslint:fix",
+    "release": "replugged release"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^18.16.19",
-    "@types/react": "^18.2.14",
-    "@typescript-eslint/eslint-plugin": "^5.61.0",
-    "@typescript-eslint/parser": "^5.61.0",
-    "discord-types": "^1.3.26",
-    "eslint": "^8.44.0",
+    "@types/node": "^20.8.10",
+    "@types/react": "^18.2.34",
+    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "@typescript-eslint/parser": "^6.9.1",
+    "discord-types": "^1.3.3",
+    "eslint": "^8.52.0",
     "eslint-config-dmitmel": "github:dmitmel/eslint-config-dmitmel",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-react": "^7.32.2",
-    "prettier": "^2.8.8",
-    "replugged": "^4.5.0",
-    "typescript": "^5.1.6"
+    "eslint-plugin-react": "^7.33.2",
+    "prettier": "^3.0.3",
+    "replugged": "^4.7.4",
+    "typescript": "^5.2.2"
   }
 }
