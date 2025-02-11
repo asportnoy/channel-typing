@@ -5,7 +5,7 @@ import { React, lodash as _, i18n, users } from "replugged/common";
 import { Loader, Tooltip } from "replugged/components";
 
 const { getCurrentUser, getUser, getTrueMember } = users;
-const { Messages } = i18n;
+const { intl, t } = i18n;
 
 interface Settings {
   hideSelf?: boolean;
@@ -69,15 +69,16 @@ function getTooltipText(users: string[], guildId: string): string {
 
   const count = names.length;
 
-  if (count === 1) return Messages.ONE_USER_TYPING.format({ a: names[0] });
-  if (count === 2) return Messages.TWO_USERS_TYPING.format({ a: names[0], b: names[1] });
+  if (count === 1) return intl.formatToPlainString(t.ONE_USER_TYPING, { a: names[0] });
+  if (count === 2)
+    return intl.formatToPlainString(t.TWO_USERS_TYPING, { a: names[0], b: names[1] });
   if (count === 3)
-    return Messages.THREE_USERS_TYPING.format({
+    return intl.formatToPlainString(t.THREE_USERS_TYPING, {
       a: names[0],
       b: names[1],
       c: names[2],
     });
-  return Messages.SEVERAL_USERS_TYPING as string;
+  return intl.string(t.SEVERAL_USERS_TYPING);
 }
 
 function TypingIndicator({ tooltip }: { tooltip: string }): React.ReactElement | null {
