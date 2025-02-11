@@ -1,8 +1,8 @@
-import { types } from "replugged";
+import type { PlaintextPatch } from "replugged/types";
 
 const pluginExports = "window.replugged.plugins.getExports('dev.albertp.ChannelTyping')";
 
-const patches: types.PlaintextPatch[] = [
+const patches: PlaintextPatch[] = [
   {
     find: /renderChannelInfo\(\){/,
     replacements: [

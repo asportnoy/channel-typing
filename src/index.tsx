@@ -1,8 +1,8 @@
-import { Channel } from "discord-types/general";
+import type { Channel } from "discord-types/general";
 import { Logger, settings } from "replugged";
-import { waitForProps } from "replugged/webpack";
 import { React, lodash as _, i18n, users } from "replugged/common";
 import { Loader, Tooltip } from "replugged/components";
+import { waitForProps } from "replugged/webpack";
 
 const { getCurrentUser, getUser, getTrueMember } = users;
 const { intl, t } = i18n;
