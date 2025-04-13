@@ -1,5 +1,5 @@
 import type { Channel } from "discord-types/general";
-import { Logger, settings } from "replugged";
+import { settings } from "replugged";
 import { React, lodash as _, i18n, users } from "replugged/common";
 import { Loader, Tooltip } from "replugged/components";
 import { waitForProps } from "replugged/webpack";
@@ -7,11 +7,12 @@ import { waitForProps } from "replugged/webpack";
 const { getCurrentUser, getUser, getTrueMember } = users;
 const { intl, t } = i18n;
 
-interface Settings {
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+type Settings = {
   hideSelf?: boolean;
   hideOnSelected?: boolean;
   hideOnMuted?: boolean;
-}
+};
 
 const defaultSettings: Partial<Settings> = {
   hideSelf: true,
@@ -19,10 +20,7 @@ const defaultSettings: Partial<Settings> = {
   hideOnMuted: true,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const logger = Logger.plugin("ChannelTyping");
-
-export const cfg = await settings.init<Settings, keyof typeof defaultSettings>(
+export const cfg = settings.init<Settings, keyof typeof defaultSettings>(
   "dev.albertp.ChannelTyping",
   defaultSettings,
 );

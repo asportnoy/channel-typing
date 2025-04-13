@@ -4,12 +4,12 @@ const pluginExports = "window.replugged.plugins.getExports('dev.albertp.ChannelT
 
 const patches: PlaintextPatch[] = [
   {
-    find: /renderChannelInfo\(\){/,
+    find: /isNewChannel:\w+&&\w+\.canBeNewChannel/,
     replacements: [
       {
-        match: /(\w+)(\.renderChannelInfo\(\))(])/g,
-        replace: (_, variable, prefix, suffix) => {
-          return `${variable}${prefix}, ${pluginExports}?.renderChannelTyping(${variable}.props)${suffix}`;
+        match: /(\w+)(\.renderChannelInfo\(\))/g,
+        replace: (_, variable, prefix) => {
+          return `${variable}${prefix}, ${pluginExports}?.renderChannelTyping(${variable}.props)`;
         },
       },
     ],
