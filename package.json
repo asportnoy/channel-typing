@@ -1,6 +1,6 @@
 {
   "name": "channel-typing",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Show typing indicators in the channel list",
   "license": "MIT",
   "engines": {
